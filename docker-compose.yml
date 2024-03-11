@@ -1,0 +1,60 @@
+version: "3.7"
+
+services:
+  ollama:
+    restart: always
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: always
+    ports:
+      - 6333:6333
+      - 6334:6334
+    volumes:
+      - ${VECTOR_DB_DIR}:/qdrant_data
+  langfuse-server:
+    image: ghcr.io/langfuse/langfuse:latest
+    depends_on:
+      - langfuse-db
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@langfuse-db:5432/${POSTGRES_DB:-postgres}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-mysecret}
+      - SALT=${SALT:-mysalt}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
+      - NEXT_PUBLIC_SIGN_UP_DISABLED=${NEXT_PUBLIC_SIGN_UP_DISABLED:-false}
+      - LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES=${LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES:-false}
+    volumes:
+      - ./langfuse_server_data:/var/lib/langfuse
+  langfuse-db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+    ports:
+      - 5432:5432
+    volumes:
+      - database_data:/var/lib/postgresql/data
+  kakawa-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${DOCS_DIR}:/usr/src/app/docs
+    depends_on:
+      - langfuse-server
+      - qdrant
+      - ollama
+volumes:
+  ollama:
+  database_data:
