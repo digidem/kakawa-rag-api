@@ -1,0 +1,37 @@
+name: Offline Stack Test
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-offline-stack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Copy .env.example to .env
+        run: cp .env.example .env
+
+      - name: Set environment variables for offline run
+        run: |
+          echo "LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}" >> .env
+          echo "LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}" >> .env
+          echo "LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}" >> .env
+          echo "LOCAL_EMBEDDING=true" >> .env
+          echo "OLLAMA_MODEL=gemma:2b" >> .env
+
+      - name: Run docker-compose
+        run: docker-compose up -d
+
+      - name: Wait for stack to be ready
+        run: sleep 60 # This is a simple wait, consider a health check loop for production
+
+      - name: Curl API endpoint for testing
+        run: |
+          commit_hash=$(git rev-parse --short HEAD)
+          curl -X 'GET' \
+            'http://127.0.0.1:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash' \
+            -H 'accept: application/json'
