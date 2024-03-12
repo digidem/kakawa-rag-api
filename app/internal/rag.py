@@ -1,11 +1,7 @@
-import json
 import logging
 import os
 import sys
-from pathlib import Path
 
-# qdrant
-import qdrant_client
 from dotenv import load_dotenv
 
 # langfuse
@@ -33,7 +29,11 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 # LLMS
 from llama_index.llms.ollama import Ollama
 from llama_index.llms.openai import OpenAI
+from llama_index.postprocessor.colbert_rerank import ColbertRerank
 from llama_index.vector_stores.qdrant import QdrantVectorStore
+
+# qdrant
+from qdrant_client import QdrantClient
 
 # Load environment variables
 load_dotenv()
@@ -44,6 +44,8 @@ openai_model = os.getenv("OPENAI_MODEL")
 ollama_model = os.getenv("OLLAMA_MODEL", "gemma:2b")
 openai_api_key = os.getenv("OPENAI_API_KEY")
 cohere_api_key = os.getenv("COHERE_API_KEY")
+qdrant_api_key = os.getenv("QDRANT_API_KEY")
+qdrant_url = os.getenv("QDRANT_URL")
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
@@ -97,7 +99,11 @@ logging.info("Loading documents from './docs/' directory.")
 documents = SimpleDirectoryReader(documents_directory).load_data()
 
 logging.info("Initializing Qdrant client with data path './qdrant_data'.")
-client = qdrant_client.QdrantClient(path=vector_store_path)
+client = (
+    QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
+    if qdrant_api_key and qdrant_url
+    else QdrantClient(path=vector_store_path)
+)
 
 logging.info("Creating QdrantVectorStore for the 'docs' collection.")
 vector_store = QdrantVectorStore(client=client, collection_name="docs")
@@ -117,16 +123,26 @@ index = VectorStoreIndex.from_documents(
 )
 
 # Querying
-top_k = 4
+top_k = 10
+logging.info("Loading ColbertRerank.")
+colbert_reranker = ColbertRerank(
+    top_n=top_k,
+    model="colbert-ir/colbertv2.0",
+    tokenizer="colbert-ir/colbertv2.0",
+    keep_retrieval_score=True,
+)
+
 logging.info(f"Creating query engine with similarity top k set to '{top_k}'.")
-query_engine = index.as_query_engine(similarity_top_k=top_k)
+query_engine = index.as_query_engine(
+    similarity_top_k=top_k, node_postprocessors=[colbert_reranker]
+)
 qa_prompt_tmpl_str = (
     "You are an expert Q&A system that is trusted around the world.\n"
     "Always answer the query using the provided context information, and not prior knowledge.\n"
     "Some rules to follow:\n"
     "1. Never directly reference the given context in your answer.\n"
     "2. Avoid statements like 'Based on the context, ...' or 'The context information ...' or anything along those lines.\n"
-    "3. If the context is not relevant to the query, just return 'No relevant context found'.\n"
+    "3. If the context is not relevant to the query, respond you're unaware'.\n"
     "user: Context information is below.\n"
     "---------------------\n"
     "{context_str}\n"

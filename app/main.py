@@ -1,8 +1,8 @@
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_offline import FastAPIOffline
 from langfuse import Langfuse
 from pydantic import BaseModel
 
@@ -13,14 +13,14 @@ langfuse = Langfuse()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPIOffline):
     # Operation on startup
     yield  # wait until shutdown
     # Flush all events to be sent to Langfuse on shutdown and terminate all Threads gracefully. This operation is blocking.
     langfuse.flush()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPIOffline(lifespan=lifespan)
 
 # Set up CORS middleware
 app.add_middleware(
