@@ -47,8 +47,7 @@ jobs:
       - name: Curl Qdrant API endpoint for testing
         run: |
           run: |
-            apt update && apt install curl -y
-            response=$(docker exec qdrant curl -s 'http://qdrant:6333/healthz')
+            response=$(docker exec qdrant apt update && apt install curl -y && curl -s 'http://qdrant:6333/healthz')
             if echo "$response" | grep -q 'healthz check passed'; then
               echo "Healthz check passed"
             else
