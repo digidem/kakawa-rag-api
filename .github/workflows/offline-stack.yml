@@ -17,10 +17,7 @@ jobs:
 
       - name: Set environment variables for offline run
         run: |
-          sed -i "s/^LANGFUSE_PUBLIC_KEY=.*/LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}/" .env
-          sed -i "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" .env
-          sed -i "s/^LANGFUSE_HOST=.*/LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}/" .env
-          sed -i "s/^OFFLINE=false/OFFLINE=true/" .env
+          sed -i -e "s/^LANGFUSE_PUBLIC_KEY=.*/LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}/" -e "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" -e "s|^LANGFUSE_HOST=.*|LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}|" -e "s/^OFFLINE=false/OFFLINE=true/" .env
       - name: Show contents of .env
         run: cat .env
       - name: Run docker-compose
