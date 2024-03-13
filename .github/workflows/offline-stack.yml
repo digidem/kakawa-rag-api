@@ -14,7 +14,13 @@ jobs:
 
       - name: Copy .env.example to .env
         run: cp .env.example .env
-
+      - name: Create docs directory
+        run: mkdir -p docs
+      - name: Download and extract documentation
+        run: |
+          curl -L "${{ secrets.DOCS_URL }}" -o documentation.zip
+          unzip documentation.zip -d docs
+          rm documentation.zip
       - name: Set environment variables for offline run
         run: |
           sed -i -e "s/^LANGFUSE_PUBLIC_KEY=.*/LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}/" -e "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" -e "s|^LANGFUSE_HOST=.*|LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}|" -e "s/^LOCAL_MODE=false/LOCAL_MODE=true/" .env
