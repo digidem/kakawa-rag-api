@@ -10,7 +10,6 @@ services:
       - ollama:/root/.ollama
     environment:
       - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma:2b}
-    command: ["sh", "-c", "ollama pull $$OLLAMA_MODEL"]
   qdrant:
     image: qdrant/qdrant:latest
     restart: always
