@@ -91,10 +91,12 @@ To run the full stack (QDrant, Ollama and LangFuse) use [docker-compose]():
 - [X] Working RAG querying
 - [x] Integration with LangFuse
 - [x] Offline-first RAG
-- [ ] Integrate a cloud-hosted vector-store
+- [x] Integrate a cloud-hosted vector-store
+- [ ] Test stack with Github Actions
+- [ ] Integrate with Google Drive
 - [ ] Caching of vector-database and embeddings
-- [ ] RAGAS test data generation
-- [ ] RAGAS evaluation
+- [ ] Evaluation data generation
+- [ ] Evaluation
 - [ ] Tuning of RAG: tecniques, embeddings, top_k, chunk sizes...
 
 ## Further exploration

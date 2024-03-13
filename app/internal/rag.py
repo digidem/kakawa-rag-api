@@ -18,8 +18,9 @@ from llama_index.core import (
     VectorStoreIndex,
 )
 from llama_index.core.callbacks import CallbackManager
-from llama_index.core.ingestion import IngestionCache, IngestionPipeline
-from llama_index.core.storage.docstore import SimpleDocumentStore
+
+# from llama_index.core.ingestion import IngestionCache, IngestionPipeline
+# from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.embeddings.cohere import CohereEmbedding
 from llama_index.embeddings.fastembed import FastEmbedEmbedding
 
@@ -40,19 +41,22 @@ load_dotenv()
 os.getenv("LANGFUSE_PUBLIC_KEY")
 os.getenv("LANGFUSE_SECRET_KEY")
 os.getenv("LANGFUSE_HOST")
-openai_model = os.getenv("OPENAI_MODEL")
+openai_model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
 ollama_model = os.getenv("OLLAMA_MODEL", "gemma:2b")
 openai_api_key = os.getenv("OPENAI_API_KEY")
 cohere_api_key = os.getenv("COHERE_API_KEY")
 qdrant_api_key = os.getenv("QDRANT_API_KEY")
 qdrant_url = os.getenv("QDRANT_URL")
+offline_mode = os.getenv("OFFLINE", "false").lower() == "true"
+local_embedding = os.getenv("LOCAL_EMBEDDING", "false").lower() == "true"
+
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
 # Setup llamaindex
-used_llm = openai_model if openai_model and openai_api_key else ollama_model
+used_llm = openai_model if openai_api_key and not offline_mode else ollama_model
 if used_llm == openai_model:
-    Settings.llm = OpenAI(temperature=0.1, model=openai_model)
+    Settings.llm = OpenAI(temperature=0.1, model=openai_model, api_key=openai_api_key)
 else:
     Settings.llm = Ollama(model=ollama_model, request_timeout=120.0)
 # Setup Langfuse as handler
@@ -65,8 +69,7 @@ used_embedding_model = None
 default_openai_embedding_model = "text-embedding-3-small"
 default_cohere_embedding_model = "embed-english-v3.0"
 default_baai_embedding_model = "BAAI/bge-small-en-v1.5"
-local_embedding = os.getenv("LOCAL_EMBEDDING", "false").lower() == "true"
-if local_embedding:
+if offline_mode or local_embedding:
     used_embedding_model = default_baai_embedding_model
     Settings.embed_model = FastEmbedEmbedding()
 elif openai_api_key:
