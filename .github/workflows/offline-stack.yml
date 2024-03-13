@@ -32,24 +32,24 @@ jobs:
       - name: Pull Ollama model
         run: |
           OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
-          curl -X POST \
+          docker exec kakawa-rag-api_ollama_1 curl -X POST \
             -H "Content-Type: application/json" \
             -d "{\"name\":\"$OLLAMA_MODEL\"}" \
-            http://127.0.0.1:11434/api/pull
+            http://localhost:11434/api/pull
       - name: Curl LangFuse API endpoint for testing
         run: |
-          curl -X 'GET' \
-            'http://127.0.0.1:3000/api/public/health' \
+          docker exec kakawa-rag-api_langfuse-server_1 curl -X 'GET' \
+            'http://localhost:3000/api/public/health' \
             -H 'accept: application/json'
       - name: Curl Qdrant API endpoint for testing
         run: |
-          curl -X 'GET' \
-            'http://127.0.0.1:6333/' \
+          docker exec kakawa-rag-api_qdrant_1 curl -X 'GET' \
+            'http://localhost:6333/' \
             -H 'accept: application/json'
       - name: Curl RAG API endpoint for testing
         run: |
           commit_hash=$(git rev-parse --short HEAD)
           echo $commit_hash
-          curl -X 'GET' \
-            'http://127.0.0.1:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash' \
+          docker exec kakawa-rag-api_kakawa-api_1 curl -X 'GET' \
+            'http://localhost:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash' \
             -H 'accept: application/json'
