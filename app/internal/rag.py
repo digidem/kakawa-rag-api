@@ -39,7 +39,7 @@ from qdrant_client import QdrantClient
 # Load environment variables
 langfuse_default_host = (
     "http://localhost:3000"
-    if os.getenv("OFFLINE", "false").lower() == "true"
+    if os.getenv("LOCAL_MODE", "false").lower() == "true"
     else "https://cloud.langfuse.com"
 )
 load_dotenv()
@@ -52,14 +52,14 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 cohere_api_key = os.getenv("COHERE_API_KEY")
 qdrant_api_key = os.getenv("QDRANT_API_KEY")
 qdrant_url = os.getenv("QDRANT_URL")
-offline_mode = os.getenv("OFFLINE", "false").lower() == "true"
+local_mode = os.getenv("LOCAL_MODE", "false").lower() == "true"
 local_embedding = os.getenv("LOCAL_EMBEDDING", "false").lower() == "true"
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
 # Setup llamaindex
-used_llm = openai_model if openai_api_key and not offline_mode else ollama_model
+used_llm = openai_model if openai_api_key and not local_mode else ollama_model
 if used_llm == openai_model:
     Settings.llm = OpenAI(temperature=0.1, model=openai_model, api_key=openai_api_key)
 else:
@@ -73,7 +73,7 @@ used_embedding_model = None
 default_openai_embedding_model = "text-embedding-3-small"
 default_cohere_embedding_model = "embed-english-v3.0"
 default_baai_embedding_model = "BAAI/bge-small-en-v1.5"
-if offline_mode or local_embedding:
+if local_mode or local_embedding:
     used_embedding_model = default_baai_embedding_model
     Settings.embed_model = FastEmbedEmbedding()
 elif openai_api_key:
@@ -108,7 +108,7 @@ documents = SimpleDirectoryReader(documents_directory).load_data()
 logging.info("Initializing Qdrant client with data path './qdrant_data'.")
 client = (
     QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
-    if qdrant_api_key and qdrant_url and not offline_mode
+    if qdrant_api_key and qdrant_url and not local_mode
     else QdrantClient(path=vector_store_path)
 )
 logging.info("Creating QdrantVectorStore for the 'docs' collection.")

@@ -17,17 +17,19 @@ jobs:
 
       - name: Set environment variables for offline run
         run: |
-          sed -i -e "s/^LANGFUSE_PUBLIC_KEY=.*/LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}/" -e "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" -e "s|^LANGFUSE_HOST=.*|LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}|" -e "s/^OFFLINE=false/OFFLINE=true/" .env
+          sed -i -e "s/^LANGFUSE_PUBLIC_KEY=.*/LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}/" -e "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" -e "s|^LANGFUSE_HOST=.*|LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}|" -e "s/^LOCAL_MODE=false/LOCAL_MODE=true/" .env
       - name: Show contents of .env
         run: cat .env
       - name: Run docker-compose
         run: docker-compose up -d
       - name: Basic wait
-        run: sleep 60
+        run: sleep 120
       - name: List running containers
         run: docker ps
       - name: Log last 10 lines from all containers
         run: docker ps -q | xargs -I {} docker logs --tail 10 {}
+      - name: Log RAG api
+        run: docker logs kakawa_rag_api --tail 30
       - name: Pull Ollama model
         run: |
           OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
