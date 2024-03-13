@@ -35,7 +35,7 @@ jobs:
         run: |
           OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
           docker exec ollama ollama pull $OLLAMA_MODEL
-      - name: Curl LangFuse API endpoint for testing
+      - name: Test LangFuse API endpoint
         run: |
           response=$(docker exec langfuse wget --header='accept: application/json' -qO - 'http://langfuse:3000/api/public/health')
           if echo "$response" | grep OK; then
@@ -44,17 +44,17 @@ jobs:
             echo "Health check failed"
             exit 1
           fi
-      - name: Curl Qdrant API endpoint for testing
+      - name: Test Qdrant API endpoint
         run: |
           run: |
-            response=$(docker exec qdrant apt update && apt install curl -y && curl -s 'http://qdrant:6333/healthz')
-            if echo "$response" | grep -q 'healthz check passed'; then
+            response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://qdrant:6333/healthz', headers={'accept': 'application/json'}); print(response.status_code)")
+            if [ "$response" -eq 200 ]; then
               echo "Healthz check passed"
             else
               echo "Healthz check failed"
               exit 1
             fi
-      - name: Curl RAG API endpoint for testing
+      - name: Execute RAG API query
         run: |
           commit_hash=$(git rev-parse --short HEAD)
           echo $commit_hash
