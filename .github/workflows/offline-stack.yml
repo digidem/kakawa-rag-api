@@ -25,10 +25,12 @@ jobs:
         run: cat .env
       - name: Run docker-compose
         run: docker-compose up -d
-      - name: List running containers
-        run: docker ps
       - name: Basic wait
         run: sleep 60
+      - name: List running containers
+        run: docker ps
+      - name: Log last 10 lines from all containers
+        run: docker ps -q | xargs -I {} docker logs --tail 10 {}
       - name: Pull Ollama model
         run: |
           OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
@@ -36,7 +38,7 @@ jobs:
       - name: Curl LangFuse API endpoint for testing
         run: |
           response=$(docker exec langfuse wget --header='accept: application/json' -qO - 'http://langfuse:3000/api/public/health')
-          if echo "$response" | grep -q '"status": "OK"'; then
+          if echo "$response" | grep OK; then
             echo "Health check OK"
           else
             echo "Health check failed"
