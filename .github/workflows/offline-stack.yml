@@ -51,20 +51,20 @@ jobs:
           fi
       - name: Test Qdrant API endpoint
         run: |
-            response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://qdrant:6333/healthz', headers={'accept': 'application/json'}); print(response.status_code)")
-            if [ "$response" -eq 200 ]; then
-              echo "Healthz check passed"
-            else
-              echo "Healthz check failed"
-              exit 1
-            fi
+          response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://qdrant:6333/healthz', headers={'accept': 'application/json'}); print(response.status_code)")
+          if [ "$response" -eq 200 ]; then
+            echo "Healthz check passed"
+          else
+            echo "Healthz check failed"
+            exit 1
+          fi
       - name: Execute RAG API query
         run: |
           commit_hash=$(git rev-parse --short HEAD)
           echo $commit_hash
           success=false
           for i in {1..5}; do
-            response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://localhost:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash', headers={'accept': 'application/json'}); print(response.status_code)")
+            response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://kakawa_rag_api:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash', headers={'accept': 'application/json'}); print(response.status_code)")
             if [ "$response" -eq 200 ]; then
               echo "RAG API endpoint is up and running."
               success=true
