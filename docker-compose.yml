@@ -2,6 +2,7 @@ version: "3.7"
 
 services:
   ollama:
+    container_name: ollama
     restart: always
     image: ollama/ollama:latest
     ports:
@@ -11,6 +12,7 @@ services:
     environment:
       - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma:2b}
   qdrant:
+    container_name: qdrant
     image: qdrant/qdrant:latest
     restart: always
     ports:
@@ -19,6 +21,7 @@ services:
     volumes:
       - ${VECTOR_DB_DIR}:/qdrant_data
   langfuse-server:
+    container_name: langfuse
     image: ghcr.io/langfuse/langfuse:latest
     depends_on:
       - langfuse-db
@@ -35,6 +38,7 @@ services:
     volumes:
       - ./langfuse_server_data:/var/lib/langfuse
   langfuse-db:
+    container_name: langfuse_db
     image: postgres
     restart: always
     environment:
@@ -45,7 +49,8 @@ services:
       - 5432:5432
     volumes:
       - database_data:/var/lib/postgresql/data
-  kakawa-api:
+  kakawa-rag-api:
+    container_name: kakawa_rag_api
     build:
       context: .
       dockerfile: Dockerfile

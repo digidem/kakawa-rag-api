@@ -32,24 +32,44 @@ jobs:
       - name: Pull Ollama model
         run: |
           OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
-          docker exec kakawa-rag-api_ollama_1 curl -X POST \
-            -H "Content-Type: application/json" \
-            -d "{\"name\":\"$OLLAMA_MODEL\"}" \
-            http://localhost:11434/api/pull
+          docker exec ollama ollama pull $OLLAMA_MODEL
       - name: Curl LangFuse API endpoint for testing
         run: |
-          docker exec kakawa-rag-api_langfuse-server_1 curl -X 'GET' \
-            'http://localhost:3000/api/public/health' \
-            -H 'accept: application/json'
+          response=$(docker exec langfuse wget --header='accept: application/json' -qO - 'http://langfuse:3000/api/public/health')
+          if echo "$response" | grep -q '"status": "OK"'; then
+            echo "Health check OK"
+          else
+            echo "Health check failed"
+            exit 1
+          fi
       - name: Curl Qdrant API endpoint for testing
         run: |
-          docker exec kakawa-rag-api_qdrant_1 curl -X 'GET' \
-            'http://localhost:6333/' \
-            -H 'accept: application/json'
+          run: |
+            apt update && apt install curl -y
+            response=$(docker exec qdrant curl -s 'http://qdrant:6333/healthz')
+            if echo "$response" | grep -q 'healthz check passed'; then
+              echo "Healthz check passed"
+            else
+              echo "Healthz check failed"
+              exit 1
+            fi
       - name: Curl RAG API endpoint for testing
         run: |
           commit_hash=$(git rev-parse --short HEAD)
           echo $commit_hash
-          docker exec kakawa-rag-api_kakawa-api_1 curl -X 'GET' \
-            'http://localhost:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash' \
-            -H 'accept: application/json'
+          success=false
+          for i in {1..5}; do
+            response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://localhost:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash', headers={'accept': 'application/json'}); print(response.status_code)")
+            if [ "$response" -eq 200 ]; then
+              echo "RAG API endpoint is up and running."
+              success=true
+              break
+            else
+              echo "Attempt $i failed with status code $response. Retrying in 20 seconds..."
+              sleep 20
+            fi
+          done
+          if [ "$success" = false ]; then
+            echo "RAG API endpoint check failed after 5 attempts."
+            exit 1
+          fi
