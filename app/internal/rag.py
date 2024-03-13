@@ -37,10 +37,15 @@ from llama_index.vector_stores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 
 # Load environment variables
+langfuse_default_host = (
+    "http://localhost:3000"
+    if os.getenv("OFFLINE", "false").lower() == "true"
+    else "https://cloud.langfuse.com"
+)
 load_dotenv()
 os.getenv("LANGFUSE_PUBLIC_KEY")
 os.getenv("LANGFUSE_SECRET_KEY")
-os.getenv("LANGFUSE_HOST")
+os.getenv("LANGFUSE_HOST", langfuse_default_host)
 openai_model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
 ollama_model = os.getenv("OLLAMA_MODEL", "gemma:2b")
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -64,7 +69,6 @@ langfuse_handler = LlamaIndexCallbackHandler()
 Settings.callback_manager = CallbackManager([langfuse_handler])
 
 # Setup embedding
-# TODO use local embedding with llama-index-embeddings-huggingface
 used_embedding_model = None
 default_openai_embedding_model = "text-embedding-3-small"
 default_cohere_embedding_model = "embed-english-v3.0"
@@ -104,10 +108,9 @@ documents = SimpleDirectoryReader(documents_directory).load_data()
 logging.info("Initializing Qdrant client with data path './qdrant_data'.")
 client = (
     QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
-    if qdrant_api_key and qdrant_url
+    if qdrant_api_key and qdrant_url and not offline_mode
     else QdrantClient(path=vector_store_path)
 )
-
 logging.info("Creating QdrantVectorStore for the 'docs' collection.")
 vector_store = QdrantVectorStore(client=client, collection_name="docs")
 
