@@ -27,18 +27,13 @@ jobs:
         run: docker-compose up -d
       - name: List running containers
         run: docker ps
-      - name: Curl RAG API endpoint for testing
+      - name: Pull Ollama model
         run: |
-          commit_hash=$(git rev-parse --short HEAD)
-          echo $commit_hash
-          curl -X 'GET' \
-            'http://localhost:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash' \
-            -H 'accept: application/json'
-      - name: Curl Ollama API endpoint for testing
-        run: |
-          curl -X 'GET' \
-            'http://localhost:11434/api/tags' \
-            -H 'accept: application/json'
+          OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d "{\"name\":\"$OLLAMA_MODEL\"}" \
+            http://localhost:11434/api/pull
       - name: Curl LangFuse API endpoint for testing
         run: |
           curl -X 'GET' \
@@ -48,4 +43,11 @@ jobs:
         run: |
           curl -X 'GET' \
             'http://localhost:6333/' \
+            -H 'accept: application/json'
+      - name: Curl RAG API endpoint for testing
+        run: |
+          commit_hash=$(git rev-parse --short HEAD)
+          echo $commit_hash
+          curl -X 'GET' \
+            'http://localhost:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash' \
             -H 'accept: application/json'
