@@ -51,7 +51,6 @@ jobs:
           fi
       - name: Test Qdrant API endpoint
         run: |
-          run: |
             response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://qdrant:6333/healthz', headers={'accept': 'application/json'}); print(response.status_code)")
             if [ "$response" -eq 200 ]; then
               echo "Healthz check passed"
