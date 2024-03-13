@@ -27,27 +27,29 @@ jobs:
         run: docker-compose up -d
       - name: List running containers
         run: docker ps
+      - name: Basic wait
+        run: sleep 60
       - name: Pull Ollama model
         run: |
           OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
           curl -X POST \
             -H "Content-Type: application/json" \
             -d "{\"name\":\"$OLLAMA_MODEL\"}" \
-            http://localhost:11434/api/pull
+            http://127.0.0.1:11434/api/pull
       - name: Curl LangFuse API endpoint for testing
         run: |
           curl -X 'GET' \
-            'http://localhost:3000/api/public/health' \
+            'http://127.0.0.1:3000/api/public/health' \
             -H 'accept: application/json'
       - name: Curl Qdrant API endpoint for testing
         run: |
           curl -X 'GET' \
-            'http://localhost:6333/' \
+            'http://127.0.0.1:6333/' \
             -H 'accept: application/json'
       - name: Curl RAG API endpoint for testing
         run: |
           commit_hash=$(git rev-parse --short HEAD)
           echo $commit_hash
           curl -X 'GET' \
-            'http://localhost:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash' \
+            'http://127.0.0.1:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash' \
             -H 'accept: application/json'
