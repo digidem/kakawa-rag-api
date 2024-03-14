@@ -55,6 +55,7 @@ qdrant_url = os.getenv("QDRANT_URL")
 local_mode = os.getenv("LOCAL_MODE", "false").lower() == "true"
 local_embedding = os.getenv("LOCAL_EMBEDDING", "false").lower() == "true"
 ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+ollama_timeout = float(os.getenv("OLLAMA_TIMEOUT", "120.0"))
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
@@ -65,7 +66,7 @@ if used_llm == openai_model:
     Settings.llm = OpenAI(temperature=0.1, model=openai_model, api_key=openai_api_key)
 else:
     Settings.llm = Ollama(
-        model=ollama_model, request_timeout=120.0, base_url=ollama_base_url
+        model=ollama_model, request_timeout=ollama_timeout, base_url=ollama_base_url
     )
 # Setup Langfuse as handler
 langfuse_handler = LlamaIndexCallbackHandler()

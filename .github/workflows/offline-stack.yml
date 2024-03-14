@@ -27,7 +27,8 @@ jobs:
             -e "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" \
             -e "s|^LANGFUSE_HOST=.*|LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}|" \
             -e "s/^LOCAL_MODE=false/LOCAL_MODE=true/" \
-            -e "s|^OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=http://ollama:11434|" .env
+            -e "s|^OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=http://ollama:11434|" \
+            -e "s|^OLLAMA_TIMEOUT=.*|OLLAMA_TIMEOUT=300|" .env
       - name: Show contents of .env
         run: cat .env
       - name: Run docker-compose
