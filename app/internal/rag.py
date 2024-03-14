@@ -54,6 +54,7 @@ qdrant_api_key = os.getenv("QDRANT_API_KEY")
 qdrant_url = os.getenv("QDRANT_URL")
 local_mode = os.getenv("LOCAL_MODE", "false").lower() == "true"
 local_embedding = os.getenv("LOCAL_EMBEDDING", "false").lower() == "true"
+ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
@@ -63,7 +64,9 @@ used_llm = openai_model if openai_api_key and not local_mode else ollama_model
 if used_llm == openai_model:
     Settings.llm = OpenAI(temperature=0.1, model=openai_model, api_key=openai_api_key)
 else:
-    Settings.llm = Ollama(model=ollama_model, request_timeout=120.0)
+    Settings.llm = Ollama(
+        model=ollama_model, request_timeout=120.0, base_url=ollama_base_url
+    )
 # Setup Langfuse as handler
 langfuse_handler = LlamaIndexCallbackHandler()
 Settings.callback_manager = CallbackManager([langfuse_handler])
@@ -109,7 +112,11 @@ logging.info("Initializing Qdrant client with data path './qdrant_data'.")
 client = (
     QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
     if qdrant_api_key and qdrant_url and not local_mode
-    else QdrantClient(path=vector_store_path)
+    else (
+        QdrantClient(path=vector_store_path, url=qdrant_url)
+        if qdrant_url
+        else QdrantClient(path=vector_store_path)
+    )
 )
 logging.info("Creating QdrantVectorStore for the 'docs' collection.")
 vector_store = QdrantVectorStore(client=client, collection_name="docs")

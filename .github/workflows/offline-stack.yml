@@ -23,7 +23,12 @@ jobs:
           rm documentation.zip
       - name: Set environment variables for offline run
         run: |
-          sed -i -e "s/^LANGFUSE_PUBLIC_KEY=.*/LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}/" -e "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" -e "s|^LANGFUSE_HOST=.*|LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}|" -e "s/^LOCAL_MODE=false/LOCAL_MODE=true/" .env
+          sed -i -e "s/^LANGFUSE_PUBLIC_KEY=.*/LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}/" \
+                 -e "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" \
+                 -e "s|^LANGFUSE_HOST=.*|LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}|" \
+                 -e "s/^LOCAL_MODE=false/LOCAL_MODE=true/" \
+                 -e "s|^OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=http://ollama:11434|" \
+                 -e "s|^QDRANT_URL=.*|QDRANT_URL=http://qdrant:6333|" .env
       - name: Show contents of .env
         run: cat .env
       - name: Run docker-compose
@@ -58,8 +63,28 @@ jobs:
             echo "Healthz check failed"
             exit 1
           fi
+      - name: Test Ollama API endpoint
+        run: |
+          OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
+          response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://ollama:11434/api/generate', json={'model': '$OLLAMA_MODEL', 'prompt': 'Why is the sky blue?', 'stream': false}); print(response.response)")
+          echo "Response: $response"
       - name: Execute RAG API query
         run: |
           commit_hash=$(git rev-parse --short HEAD)
           echo $commit_hash
-          docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://kakawa_rag_api:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash', headers={'accept': 'application/json'}); print(response.status_code)"
+          success=false
+          for i in {1..5}; do
+            response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://kakawa_rag_api:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash', headers={'accept': 'application/json'}); print(response.status_code)")
+            if [ "$response" -eq 200 ]; then
+              echo "RAG API endpoint is up and running."
+              success=true
+              break
+            else
+              echo "Attempt $i failed with status code $response. Retrying in 20 seconds..."
+              sleep 20
+            fi
+          done
+          if [ "$success" = false ]; then
+            echo "RAG API endpoint check failed after 5 attempts."
+            exit 1
+          fi
