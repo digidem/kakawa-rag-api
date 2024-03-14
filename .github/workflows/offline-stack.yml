@@ -65,7 +65,7 @@ jobs:
       - name: Test Ollama API endpoint
         run: |
           OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
-          response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://ollama:11434/api/generate', json={'model': '$OLLAMA_MODEL', 'prompt': 'Why is the sky blue?', 'stream': false}); print(response.response)")
+          response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://ollama:11434/api/generate', json={'model': '$OLLAMA_MODEL', 'prompt': 'Why is the sky blue?', 'stream': False}); print(response.response)")
           echo "Response: $response"
       - name: Execute RAG API query
         run: |
