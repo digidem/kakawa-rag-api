@@ -6,10 +6,14 @@ from fastapi_offline import FastAPIOffline
 from langfuse import Langfuse
 from pydantic import BaseModel
 
-from app.internal.rag import rag
+from app.internal.rag import langfuse_handler, rag
 
 # Init fastapi
-langfuse = Langfuse()
+langfuse = None
+if langfuse_handler:
+    langfuse = Langfuse()
+else:
+    print("Starting without Langfuse")
 
 
 @asynccontextmanager
@@ -17,7 +21,8 @@ async def lifespan(app: FastAPIOffline):
     # Operation on startup
     yield  # wait until shutdown
     # Flush all events to be sent to Langfuse on shutdown and terminate all Threads gracefully. This operation is blocking.
-    langfuse.flush()
+    if langfuse:
+        langfuse.flush()
 
 
 app = FastAPIOffline(lifespan=lifespan)

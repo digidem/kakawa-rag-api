@@ -98,7 +98,15 @@ To run the full stack (QDrant, Ollama and LangFuse) use [docker-compose]():
 - [ ] Evaluation data generation
 - [ ] Evaluation
 - [ ] Tuning of RAG: tecniques, embeddings, top_k, chunk sizes...
-
+  - [Weviate Hybrid Seach](https://docs.llamaindex.ai/en/stable/examples/vector_stores/WeaviateIndexDemo-Hybrid.html)
+  - [Retrieval-Augmented Dual Instruction Tuning (RA-DIT)](https://www.llamaindex.ai/blog/improving-rag-effectiveness-with-retrieval-augmented-dual-instruction-tuning-ra-dit-01e73116655d)
+  - [Fine Tune LLM](https://github.com/adithya-s-k/LLM-Alchemy-Chamber)
+  - [Query Transformations](https://docs.llamaindex.ai/en/stable/optimizing/advanced_retrieval/query_transformations.html)
+  - [Simple](https://docs.llamaindex.ai/en/stable/examples/retrievers/simple_fusion.html) and [Advanced](https://docs.llamaindex.ai/en/stable/examples/retrievers/relative_score_dist_fusion.html) Fusion Retrievers
+  - [Network of knowledge](https://www.llamaindex.ai/blog/querying-a-network-of-knowledge-with-llama-index-networks-d784b4c3006f)
+  - [Awesome LLM RAG](https://github.com/jxzhangjhu/Awesome-LLM-RAG)
+  - [LlamaIndex Production RAG](https://docs.llamaindex.ai/en/stable/optimizing/production_rag.html)
+  - [The Chronicles of RAG](https://arxiv.org/abs/2401.07883)
 ## Further exploration
 
 - [RAGatouille](https://github.com/bclavie/RAGatouille)

@@ -35,3 +35,9 @@
 **/langfuse_server_data
 **/.history
 **/pipeline_cache
+**/eval_questions
+**/eval_results
+**/benchmark_results
+**/dataset_cache/
+**/pack/
+**/test_docs
