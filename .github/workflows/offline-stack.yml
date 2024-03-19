@@ -23,8 +23,8 @@ jobs:
           rm documentation.zip
       - name: Set environment variables for offline run
         run: |
-          sed -i -e "s|^LANGFUSE_PUBLIC_KEY=.*|LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}|" \
-            -e "s|^LANGFUSE_SECRET_KEY=.*|LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}|" \
+          sed -i -e "s/^LANGFUSE_PUBLIC_KEY=.*/LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}/" \
+            -e "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" \
             -e "s|^LANGFUSE_HOST=.*|LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}|" \
             -e "s|^LOCAL_EMBEDDING=false|LOCAL_EMBEDDING=true|" \
             -e "s|^GROQ_API_KEY=.*|GROQ_API_KEY=\${{ secrets.GROQ_API_KEY }}|" \
