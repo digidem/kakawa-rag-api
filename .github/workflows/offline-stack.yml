@@ -23,13 +23,13 @@ jobs:
           rm documentation.zip
       - name: Set environment variables for offline run
         run: |
-          sed -i -e "s/^LANGFUSE_PUBLIC_KEY=.*/LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}/" \
-            -e "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" \
-            -e "s|^LANGFUSE_HOST=.*|LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}|" \
-            -e "s|^LOCAL_EMBEDDING=false|LOCAL_EMBEDDING=true|" \
-            -e "s|^GROQ_API_KEY=.*|GROQ_API_KEY=\${{ secrets.GROQ_API_KEY }}|" \
-            -e "s|^OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=http://ollama:11434|" \
-            -e "s|^OLLAMA_TIMEOUT=.*|OLLAMA_TIMEOUT=300|" .env
+          sed -i "s/^LANGFUSE_PUBLIC_KEY=.*/LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}/" .env
+          sed -i "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" .env
+          sed -i "s|^LANGFUSE_HOST=.*|LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}|" .env
+          sed -i "s|^LOCAL_EMBEDDING=false|LOCAL_EMBEDDING=true|" .env
+          sed -i "s|^GROQ_API_KEY=.*|GROQ_API_KEY=\${{ secrets.GROQ_API_KEY }}|" .env
+          sed -i "s|^OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=http://ollama:11434|" .env
+          sed -i "s|^OLLAMA_TIMEOUT=.*|OLLAMA_TIMEOUT=300|" .env
       - name: Show contents of .env
         run: cat .env
       - name: Run docker-compose
