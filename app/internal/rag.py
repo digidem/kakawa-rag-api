@@ -6,7 +6,7 @@ from shutil import rmtree
 from dotenv import load_dotenv
 
 # LlamaIndex
-from llama_index.core import PromptTemplate, Settings
+from llama_index.core import Settings
 
 # Embedding
 from app.rag.embedding import setup_embedding

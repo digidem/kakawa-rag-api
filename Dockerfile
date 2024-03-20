@@ -6,6 +6,9 @@ WORKDIR /usr/src/app
 # Copy the current directory contents into the container at /usr/src/app
 COPY . .
 
+# Set PYTHONPATH to ensure local imports work
+ENV PYTHONPATH=/usr/src/app
+
 # Install poetry, disable virtualenv creation and install dependencies
 RUN pip install --no-cache-dir poetry && \
     poetry config virtualenvs.create false && \
@@ -13,4 +16,4 @@ RUN pip install --no-cache-dir poetry && \
 
 EXPOSE 8000
 # Run main.py when the container launches
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
