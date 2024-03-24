@@ -1,19 +1,37 @@
-FROM python:3.9-slim
+FROM python:3.11.5-slim AS builder
 
-# Set the working directory in the container
-WORKDIR /usr/src/app
+ENV POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=1 \
+    POETRY_NO_INTERACTION=1
 
-# Copy the current directory contents into the container at /usr/src/app
-COPY . .
+# to run poetry directly as soon as it's installed
+ENV PATH="$POETRY_HOME/bin:$PATH"
 
-# Install poetry, disable virtualenv creation and install dependencies
-RUN pip install --no-cache-dir poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --no-dev --no-interaction --no-ansi
+# install poetry
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && curl -sSL https://install.python-poetry.org | python3 -
 
-# Set PYTHONPATH to ensure local imports work
-ENV PYTHONPATH=${PYTHONPATH}:${PWD}
+WORKDIR /app
 
+# copy only pyproject.toml and poetry.lock file nothing else here
+COPY poetry.lock pyproject.toml ./
+
+# this will create the folder /app/.venv (might need adjustment depending on which poetry version you are using)
+RUN poetry lock && poetry install --no-root --no-ansi --without dev
+
+# ---------------------------------------------------------------------
+
+FROM python:3.11.5-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app
+
+# copy the venv folder from builder image
+COPY --from=builder /app/.venv ./.venv
 EXPOSE 8000
 # Run main.py when the container launches
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
