@@ -40,7 +40,7 @@ jobs:
       - name: Log last 10 lines from all containers
         run: docker ps -q | xargs -I {} docker logs --tail 10 {}
       - name: Log RAG api
-        run: docker logs kakawa_rag_api --tail 30
+        run: docker logs kakawa_rag_api --tail 100
       - name: Pull Ollama model
         run: |
           OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)

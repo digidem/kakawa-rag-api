@@ -32,6 +32,10 @@ WORKDIR /app
 
 # copy the venv folder from builder image
 COPY --from=builder /app/.venv ./.venv
+
+# copy the application code
+COPY . .
+
 EXPOSE 8000
 # Run main.py when the container launches
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
