@@ -3,6 +3,7 @@ import os
 import sys
 from shutil import rmtree
 
+import requests
 from dotenv import load_dotenv
 
 # LlamaIndex
@@ -38,13 +39,14 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 if local_mode:
     print("Running in local mode")
 else:
-    response = os.system("ping -c 1 8.8.8.8")
-    if response == 0:
-        print("Running in cloud mode")
-    else:
-        print("Cloud mode connectivity failed, switching to local mode")
+    connectivity_test_url = "https://httpbin.org/get"
+    try:
+        with requests.get(connectivity_test_url, timeout=5) as response:
+            response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
+            print("Running in cloud mode")
+    except (requests.ConnectionError, requests.Timeout, requests.HTTPError) as e:
+        print(f"Cloud mode connectivity failed ({e}), switching to local mode")
         local_mode = True
-
 # Setup LLM
 used_llm = setup_llm(local_mode)
 # Setup Langfuse as handler
