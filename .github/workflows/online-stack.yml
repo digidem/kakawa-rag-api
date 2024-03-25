@@ -37,9 +37,9 @@ jobs:
       - name: List running containers
         run: docker ps
       - name: Log last 10 lines from all containers
-        run: docker ps -q | xargs -I {} docker logs --tail 10 {}
+        run: docker ps -q | xargs -I {} docker logs --tail 100 {}
       - name: Log RAG api
-        run: docker logs kakawa_rag_api --tail 100
+        run: docker logs kakawa_rag_api --tail 300
       - name: Test Online LangFuse API endpoint
         run: |
           response=$(docker exec langfuse wget --header='accept: application/json' -qO - "${{ secrets.LANGFUSE_HOST }}/api/public/health")
