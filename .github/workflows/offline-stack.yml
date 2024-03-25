@@ -42,9 +42,15 @@ jobs:
         run: docker ps -q | xargs -I {} docker logs --tail 10 {}
       - name: Log RAG api
         run: docker logs kakawa_rag_api --tail 100
+      - name: Free up disk space
+        run: |
+          sudo apt-get clean
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
       - name: Pull Ollama model
         run: |
           OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
+          echo "OLLAMA_MODEL: $OLLAMA_MODEL"
           docker exec ollama ollama pull $OLLAMA_MODEL
       - name: Test LangFuse API endpoint
         run: |

@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  test-offline-stack:
+  test-online-stack:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -33,29 +33,20 @@ jobs:
       - name: Run docker-compose
         run: docker-compose up -d
       - name: Basic wait
-        run: sleep 120
+        run: sleep 100
       - name: List running containers
         run: docker ps
       - name: Log last 10 lines from all containers
         run: docker ps -q | xargs -I {} docker logs --tail 10 {}
       - name: Log RAG api
         run: docker logs kakawa_rag_api --tail 100
-      - name: Test LangFuse API endpoint
+      - name: Test Online LangFuse API endpoint
         run: |
-          response=$(docker exec langfuse wget --header='accept: application/json' -qO - 'http://langfuse:3000/api/public/health')
+          response=$(docker exec langfuse wget --header='accept: application/json' -qO - "${{ secrets.LANGFUSE_HOST }}/api/public/health")
           if echo "$response" | grep OK; then
             echo "Health check OK"
           else
             echo "Health check failed"
-            exit 1
-          fi
-      - name: Test Qdrant API endpoint
-        run: |
-          response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://qdrant:6333/healthz', headers={'accept': 'application/json'}); print(response.status_code)")
-          if [ "$response" -eq 200 ]; then
-            echo "Healthz check passed"
-          else
-            echo "Healthz check failed"
             exit 1
           fi
       - name: Execute RAG API query
