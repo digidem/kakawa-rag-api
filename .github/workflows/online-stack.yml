@@ -33,7 +33,7 @@ jobs:
       - name: Run docker-compose
         run: docker-compose up -d
       - name: Basic wait
-        run: sleep 100
+        run: sleep 120
       - name: List running containers
         run: docker ps
       - name: Log last 10 lines from all containers
@@ -55,6 +55,7 @@ jobs:
           echo $commit_hash
           success=false
           for i in {1..5}; do
+            echo "Attempt $i:"
             response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('http://kakawa_rag_api:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash', headers={'accept': 'application/json'}); print(response.status_code)")
             if [ "$response" -eq 200 ]; then
               echo "RAG API endpoint is up and running."
