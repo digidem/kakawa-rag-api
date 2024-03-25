@@ -1,4 +1,4 @@
-name: Offline Stack Test
+name: Online Stack Test
 
 on:
   push:
@@ -23,13 +23,11 @@ jobs:
           rm documentation.zip
       - name: Set environment variables
         run: |
-          sed -i "s|^LOCAL_MODE=false|LOCAL_MODE=true|" .env
           sed -i "s/^LANGFUSE_PUBLIC_KEY=.*/LANGFUSE_PUBLIC_KEY=\${{ secrets.LANGFUSE_PK }}/" .env
           sed -i "s/^LANGFUSE_SECRET_KEY=.*/LANGFUSE_SECRET_KEY=\${{ secrets.LANGFUSE_SK }}/" .env
           sed -i "s|^LANGFUSE_HOST=.*|LANGFUSE_HOST=\${{ secrets.LANGFUSE_HOST }}|" .env
           sed -i "s|^LOCAL_EMBEDDING=false|LOCAL_EMBEDDING=true|" .env
-          sed -i "s|^OLLAMA_MODEL=.*|OLLAMA_MODEL=gemma:2b|" .env
-          sed -i "s|^OLLAMA_BASE_URL=.*|OLLAMA_BASE_URL=http://ollama:11434|" .env
+          sed -i "s|^GROQ_API_KEY=.*|GROQ_API_KEY=\${{ secrets.GROQ_API_KEY }}|" .env
       - name: Show contents of .env
         run: cat .env
       - name: Run docker-compose
@@ -42,10 +40,6 @@ jobs:
         run: docker ps -q | xargs -I {} docker logs --tail 10 {}
       - name: Log RAG api
         run: docker logs kakawa_rag_api --tail 100
-      - name: Pull Ollama model
-        run: |
-          OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
-          docker exec ollama ollama pull $OLLAMA_MODEL
       - name: Test LangFuse API endpoint
         run: |
           response=$(docker exec langfuse wget --header='accept: application/json' -qO - 'http://langfuse:3000/api/public/health')
@@ -64,11 +58,6 @@ jobs:
             echo "Healthz check failed"
             exit 1
           fi
-      - name: Test Ollama API endpoint
-        run: |
-          OLLAMA_MODEL=$(grep OLLAMA_MODEL .env | cut -d '=' -f2)
-          response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.post('http://ollama:11434/api/generate', json={'model': '$OLLAMA_MODEL', 'prompt': 'Hello', 'stream': False}).json(); print(response['response'])")
-          echo "$response"
       - name: Execute RAG API query
         run: |
           commit_hash=$(git rev-parse --short HEAD)
