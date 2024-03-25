@@ -47,7 +47,7 @@ def setup_llm(local_mode):
         Settings.llm = TogetherLLM(model=togetherai_model, api_key=togetherai_api_key)
     elif used_llm == groq_model:
         Settings.llm = Groq(model=groq_model, api_key=groq_api_key)
-    else:
+    elif used_llm == ollama_model:
         # Check if the OLLAMA_MODEL is available
         try:
             logging.info(f"Checking if {ollama_model} is available...")
@@ -62,4 +62,6 @@ def setup_llm(local_mode):
         Settings.llm = Ollama(
             model=ollama_model, request_timeout=ollama_timeout, base_url=ollama_base_url
         )
+    else:
+        raise ValueError(f"No LLM configured for model: {used_llm}")
     return Settings.llm
