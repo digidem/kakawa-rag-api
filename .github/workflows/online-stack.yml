@@ -33,7 +33,7 @@ jobs:
       - name: Run docker-compose
         run: docker-compose up -d
       - name: Basic wait
-        run: sleep 120
+        run: sleep 160
       - name: List running containers
         run: docker ps
       - name: Log last 10 lines from all containers
@@ -54,22 +54,25 @@ jobs:
           commit_hash=$(git rev-parse --short HEAD)
           echo "Commit Hash: $commit_hash"
           success=false
-          for i in {1..5}; do
+          max_attempts=5
+          attempt_delay=20
+          rag_api_endpoint="http://kakawa_rag_api:8000/rag"
+          rag_query="How%20to%20install%20Mapeo"
+          rag_user_id="github_action"
+          rag_session_id=$commit_hash
+          for i in $(seq 1 $max_attempts); do
             echo "Attempt $i:"
-            response=$(docker exec kakawa_rag_api python -c "import requests; try: response = requests.get('http://kakawa_rag_api:8000/rag?query=How%20to%20install%20Mapeo&user_id=github_action&session_id=$commit_hash', headers={'accept': 'application/json'}); print(response.status_code) except requests.exceptions.RequestException as e: print(e)")
-            if echo "$response" | grep -q "200"; then
+            response=$(docker exec kakawa_rag_api python -c "import requests; response = requests.get('${rag_api_endpoint}?query=${rag_query}&user_id=${rag_user_id}&session_id=${rag_session_id}', headers={'Accept': 'application/json'}); print(response.status_code)" 2>&1)
+            if [ "$response" -eq 200 ]; then
               echo "RAG API endpoint is up and running."
               success=true
               break
-            elif echo "$response" | grep -q "ConnectionError"; then
-              echo "Connection error occurred. Retrying in 20 seconds..."
-              sleep 20
             else
-              echo "Attempt $i failed with status code $response. Retrying in 20 seconds..."
-              sleep 20
-            fi
+              echo "Attempt $i failed with status code $status_code. Retrying in $attempt_delay seconds..."
+              sleep $attempt_delay
+          fi
           done
           if [ "$success" = false ]; then
-            echo "RAG API endpoint check failed after 5 attempts."
+            echo "RAG API endpoint check failed after $max_attempts attempts."
             exit 1
           fi
