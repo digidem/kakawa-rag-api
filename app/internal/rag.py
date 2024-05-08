@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import time
 from shutil import rmtree
 
 import requests
@@ -8,9 +9,6 @@ from dotenv import load_dotenv
 
 # LlamaIndex
 from llama_index.core import Settings
-
-# Embedding
-from app.rag.embedding import setup_embedding
 
 # Handler
 from app.rag.handler import setup_langfuse
@@ -29,9 +27,11 @@ from app.rag.retrieval import initialize_colbert_reranker
 from app.rag.vector_store import initialize_vector_store
 
 # Load environment variables
+start_time = time.time()
 load_dotenv()
 local_mode = os.getenv("LOCAL_MODE", "false").lower() == "true"
 top_k = int(os.getenv("TOP_K", "4"))
+check = os.getenv("CHECK", "false").lower() == "true"
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 # logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
@@ -39,29 +39,35 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 if local_mode:
     print("Running in local mode")
 else:
-    connectivity_test_url = "https://httpbin.org/get"
-    try:
-        with requests.get(connectivity_test_url, timeout=5) as response:
-            response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
-            print("Running in cloud mode")
-    except (requests.ConnectionError, requests.Timeout, requests.HTTPError) as e:
-        print(f"Cloud mode connectivity failed ({e}), switching to local mode")
-        local_mode = True
+    if check:
+        connectivity_test_url = "https://httpbin.org/get"
+        try:
+            with requests.get(connectivity_test_url, timeout=5) as response:
+                response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
+                print("Running in cloud mode")
+        except (requests.ConnectionError, requests.Timeout, requests.HTTPError) as e:
+            print(f"Cloud mode connectivity failed ({e}), switching to local mode")
+            local_mode = True
+    else:
+        print("Running in cloud mode without connectivity check")
 # Setup LLM
 used_llm = setup_llm(local_mode)
-# Setup Langfuse as handler
-langfuse_handler = setup_langfuse(local_mode)
-# Setup embedding
-used_embedding_model = setup_embedding(local_mode)
-# Log embedding and LLM details
-logging.info(f"Using embedding model: {Settings.embed_model.__class__.__name__}")
 logging.info(f"Using LLM: {Settings.llm.__class__.__name__}")
+# Setup Langfuse as handler
+if os.getenv("TEST", "false").lower() != "true":
+    langfuse_handler = setup_langfuse(local_mode)
+    logging.info("Using LangFuse handler")
+else:
+    langfuse_handler = None
+
 # Setup vector store
-document_files, vector_database, index = initialize_vector_store(local_mode)
+document_files, vector_database, vector_index, used_embedding_model = (
+    initialize_vector_store(local_mode)
+)
 
 colbert_reranker, retrieval_strategy = initialize_colbert_reranker(top_k)
 logging.info(f"Creating query engine with similarity top k set to '{top_k}'.")
-query_engine = index.as_query_engine(
+query_engine = vector_index.as_query_engine(
     similarity_top_k=top_k, node_postprocessors=[colbert_reranker]
 )
 
@@ -80,6 +86,9 @@ metadata = {
 
 for key, value in metadata.items():
     logging.info(f"Metadata - {key}: {value}")
+
+initialization_time = time.time() - start_time
+logging.info(f"RAG app initialized in {initialization_time:.2f} seconds")
 
 
 def rag(query, user_id="test_user", session_id="test_session"):

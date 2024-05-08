@@ -1,6 +1,7 @@
 # Kakawa RAG API
 
 [![Offline Stack Test](https://github.com/digidem/kakawa-rag-api/actions/workflows/offline-stack.yml/badge.svg)](https://github.com/digidem/kakawa-rag-api/actions/workflows/offline-stack.yml)
+[![Online Stack Test](https://github.com/digidem/kakawa-rag-api/actions/workflows/online-stack.yml/badge.svg)](https://github.com/digidem/kakawa-rag-api/actions/workflows/online-stack.yml)
 
 
 The document retrieval API for Kakawa, a product-support bot that efficiently responds to questions given any documentation. It can run online with cutting-edge AI models, or offline on regular hardware. It can also be integrated with existing platforms such as WhatsApp.

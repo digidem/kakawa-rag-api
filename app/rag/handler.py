@@ -1,3 +1,4 @@
+import logging
 import os
 
 import requests
@@ -12,16 +13,19 @@ def setup_langfuse(local_mode):
     )
     os.getenv("LANGFUSE_PUBLIC_KEY")
     os.getenv("LANGFUSE_SECRET_KEY")
-    os.getenv("LANGFUSE_HOST", langfuse_default_host)
     langfuse_handler = None
-    langfuse_host = os.getenv("LANGFUSE_HOST", "http://langfuse:3000")
-    try:
-        response = requests.get(f"{langfuse_host}/api/public/health")
-        if response.ok:
-            langfuse_handler = LlamaIndexCallbackHandler()
-            Settings.callback_manager = CallbackManager([langfuse_handler])
-        else:
-            print("Langfuse isn't running")
-    except requests.exceptions.RequestException as e:
-        print("Langfuse isn't running, error:", e)
+    langfuse_host = os.getenv("LANGFUSE_HOST", langfuse_default_host)
+    check = os.getenv("CHECK", "false").lower() == "true"
+    if check:
+        logging.info(f"Pinging {langfuse_host}/api/public/health for health check.")
+        try:
+            response = requests.get(f"{langfuse_host}/api/public/health", timeout=5)
+            if response.ok:
+                logging.info("Langfuse is running")
+                langfuse_handler = LlamaIndexCallbackHandler()
+                Settings.callback_manager = CallbackManager([langfuse_handler])
+            else:
+                print("Langfuse isn't running")
+        except requests.exceptions.RequestException as e:
+            print("Langfuse isn't running, error:", e)
     return langfuse_handler
