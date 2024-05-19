@@ -5,6 +5,7 @@ import time
 from llama_index.core import Settings
 from llama_index.embeddings.cohere import CohereEmbedding
 from llama_index.embeddings.fastembed import FastEmbedEmbedding
+from llama_index.embeddings.jinaai import JinaEmbedding
 from llama_index.embeddings.openai import OpenAIEmbedding
 
 
@@ -16,13 +17,14 @@ def setup_embedding(local_mode):
     local_embedding = os.getenv("LOCAL_EMBEDDING", "false").lower() == "true"
     cohere_api_key = os.getenv("COHERE_API_KEY")
     openai_api_key = os.getenv("OPENAI_API_KEY")
+    jina_api_key = os.getenv("JINA_API_KEY")
 
     used_embedding_model = None
     default_together_embedding_model = "togethercomputer/m2-bert-80M-8k-retrieval"
     default_openai_embedding_model = "text-embedding-3-small"
     default_cohere_embedding_model = "embed-english-v3.0"
     default_baai_embedding_model = "BAAI/bge-small-en-v1.5"
-
+    default_jina_embedding_model = "jina-embeddings-v2-base-en"
     logging.info(f"local_mode: {local_mode}, local_embedding: {local_embedding}")
     if local_mode or local_embedding:
         used_embedding_model = default_baai_embedding_model
@@ -34,6 +36,14 @@ def setup_embedding(local_mode):
             logging.info(f"Using local embedding model: {used_embedding_model}")
         except Exception as e:
             logging.error(f"Failed to set up FastEmbedEmbedding: {e}")
+    elif jina_api_key:
+        used_embedding_model = os.getenv("JINA_MODEL", default_jina_embedding_model)
+        Settings.embed_model = JinaEmbedding(
+            api_key=jina_api_key,
+            model=used_embedding_model,
+        )
+        logging.info(f"Using Jina.ai embedding model: {used_embedding_model}")
+
     elif openai_api_key:
         used_embedding_model = os.getenv(
             "EMBEDDING_MODEL", default_openai_embedding_model
@@ -53,9 +63,8 @@ def setup_embedding(local_mode):
         )
         logging.info(f"Using Cohere embedding model: {used_embedding_model}")
     else:
-        logging.error("No API key found for OpenAI or Cohere.")
-        raise ValueError("No API key found for OpenAI or Cohere.")
-
+        logging.error("No API key found for OpenAI, Cohere, or Jina.ai.")
+        raise ValueError("No API key found for OpenAI, Cohere, or Jina.ai.")
     initialization_time = time.time() - start_time
     logging.info(
         f"Embedding model setup completed in {initialization_time:.2f} seconds"

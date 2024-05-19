@@ -1848,6 +1848,20 @@ fastembed = ">=0.2.2,<0.3.0"
 llama-index-core = ">=0.10.11.post1,<0.11.0"
 
 [[package]]
+name = "llama-index-embeddings-jinaai"
+version = "0.1.5"
+description = "llama-index embeddings jinaai integration"
+optional = false
+python-versions = "<4.0,>=3.8.1"
+files = [
+    {file = "llama_index_embeddings_jinaai-0.1.5-py3-none-any.whl", hash = "sha256:d93cb7b28e2d99b923b18fb6772150f7b0aa54ba0479e24a49f10e266c7b8261"},
+    {file = "llama_index_embeddings_jinaai-0.1.5.tar.gz", hash = "sha256:51b66443fc4b03db619be9a12fb42ddef9be5335af75ed2502777be2b3103fa7"},
+]
+
+[package.dependencies]
+llama-index-core = ">=0.10.1,<0.11.0"
+
+[[package]]
 name = "llama-index-embeddings-openai"
 version = "0.1.9"
 description = "llama-index embeddings openai integration"
@@ -5371,4 +5385,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "08568653eda7f340322446e540466aa1c214149b4939a48c0265060b043940dc"
+content-hash = "5029cf5e264a8b8e492e02bc591f9132cf86166a9be40f9b8c19d11a39d17e09"
